@@ -63,9 +63,8 @@ jobs:
       - name: Find and copy APK
         run: |
           mkdir -p output
-          cp freshapp/android/app/build/outputs/flutter-apk/app-release.apk output/Scan.apk
-          echo "APK copied successfully"
-          ls -la output/
+          find . -name "*.apk" | sort
+          find . -name "*.apk" -exec cp {} output/Scan.apk \; || echo "No APK found"
 
       - uses: actions/upload-artifact@v4
         with:
