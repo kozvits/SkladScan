@@ -1,0 +1,73 @@
+name: Build APK
+
+on:
+  push:
+    branches: [ main ]
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          path: myapp
+
+      - uses: actions/setup-java@v4
+        with:
+          java-version: '17'
+          distribution: 'temurin'
+
+      - uses: subosito/flutter-action@v2
+        with:
+          flutter-version: '3.24.0'
+          channel: 'stable'
+
+      - name: Create fresh Flutter project
+        run: flutter create --project-name sklad_inventar freshapp
+
+      - name: Copy source files into fresh project
+        run: |
+          cp -r myapp/lib/* freshapp/lib/
+          cp myapp/pubspec.yaml freshapp/pubspec.yaml
+          cp myapp/android/app/src/main/AndroidManifest.xml \
+             freshapp/android/app/src/main/AndroidManifest.xml
+          cp myapp/android/app/build.gradle freshapp/android/app/build.gradle
+          cp myapp/android/build.gradle freshapp/android/build.gradle
+          cp myapp/android/gradle.properties freshapp/android/gradle.properties
+          cp myapp/android/settings.gradle freshapp/android/settings.gradle
+
+      - name: Fix Gradle version
+        working-directory: freshapp
+        run: |
+          sed -i 's/gradle-7[^ ]*\.zip/gradle-8.0-all.zip/g' \
+            android/gradle/wrapper/gradle-wrapper.properties
+          cat android/gradle/wrapper/gradle-wrapper.properties
+
+      - name: Get dependencies
+        working-directory: freshapp
+        run: flutter pub get
+
+      - name: Create local.properties
+        working-directory: freshapp
+        run: |
+          echo "flutter.sdk=$FLUTTER_ROOT" > android/local.properties
+          echo "sdk.dir=$ANDROID_SDK_ROOT" >> android/local.properties
+
+      - name: Build APK
+        working-directory: freshapp
+        run: flutter build apk --release
+        continue-on-error: true
+
+      - name: Find and copy APK
+        run: |
+          mkdir -p output
+          cp freshapp/android/app/build/outputs/flutter-apk/app-release.apk output/Scan.apk
+          echo "APK copied successfully"
+          ls -la output/
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: Scan
+          path: output/Scan.apk
