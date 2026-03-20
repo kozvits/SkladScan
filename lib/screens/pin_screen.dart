@@ -99,18 +99,37 @@ class _PinScreenState extends State<PinScreen> with SingleTickerProviderStateMix
             const Spacer(),
             // Logo
             Container(
-              width: 72,
-              height: 72,
+              width: 96,
+              height: 96,
               decoration: BoxDecoration(
-                color: Colors.white.withOpacity(0.15),
-                borderRadius: BorderRadius.circular(20),
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(24),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withOpacity(0.15),
+                    blurRadius: 16,
+                    offset: const Offset(0, 4),
+                  ),
+                ],
               ),
-              child: const Icon(Icons.inventory_2_rounded,
-                  color: Colors.white, size: 40),
+              child: ClipRRect(
+                borderRadius: BorderRadius.circular(24),
+                child: Image.asset(
+                  'assets/icon/logo.png',
+                  width: 96,
+                  height: 96,
+                  fit: BoxFit.cover,
+                  errorBuilder: (_, __, ___) => const Icon(
+                    Icons.qr_code_scanner_rounded,
+                    color: AppTheme.primary,
+                    size: 56,
+                  ),
+                ),
+              ),
             ),
             const SizedBox(height: 16),
             const Text(
-              'СкладИнвентарь',
+              'SkladScan',
               style: TextStyle(
                 color: Colors.white,
                 fontSize: 24,
