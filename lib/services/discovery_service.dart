@@ -1,4 +1,7 @@
 // lib/services/discovery_service.dart
+//
+// Автоматически находит СкладПриёмник в локальной сети через mDNS
+// Пакет: multicast_dns: ^0.3.2+2
 
 import 'dart:async';
 import 'package:multicast_dns/multicast_dns.dart';
@@ -8,9 +11,13 @@ class DiscoveryService {
   static const String _serviceType = '_sklad._tcp';
   static const Duration _timeout = Duration(seconds: 5);
 
+  /// Найти СкладПриёмник в локальной сети
+  /// Возвращает URL вида http://192.168.1.100:8765 или null
   static Future<String?> discover() async {
+    // Сначала пробуем mDNS имя
     final mdnsUrl = await _tryMdns();
     if (mdnsUrl != null) return mdnsUrl;
+
     return null;
   }
 
@@ -18,6 +25,7 @@ class DiscoveryService {
     try {
       final client = MDnsClient();
       await client.start();
+
       String? foundUrl;
 
       await for (final PtrResourceRecord ptr in client
@@ -25,6 +33,7 @@ class DiscoveryService {
             ResourceRecordQuery.serverPointer(_serviceType),
           )
           .timeout(_timeout, onTimeout: (_) {})) {
+        // Нашли запись — ищем SRV и A записи
         await for (final SrvResourceRecord srv in client
             .lookup<SrvResourceRecord>(
               ResourceRecordQuery.service(ptr.domainName),
@@ -36,6 +45,7 @@ class DiscoveryService {
               )
               .timeout(const Duration(seconds: 3), onTimeout: (_) {})) {
             final url = 'http://${ip.address.address}:${srv.port}';
+            // Проверяем что сервер отвечает
             if (await _checkServer(url)) {
               foundUrl = url;
               break;
@@ -53,6 +63,7 @@ class DiscoveryService {
     }
   }
 
+  /// Проверить что сервер отвечает
   static Future<bool> _checkServer(String url) async {
     try {
       final response = await http
@@ -64,6 +75,7 @@ class DiscoveryService {
     }
   }
 
+  /// Проверить конкретный URL
   static Future<bool> checkUrl(String url) async {
     return _checkServer(url);
   }
