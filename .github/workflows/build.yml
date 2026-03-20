@@ -50,6 +50,17 @@ jobs:
             fi
           done
 
+      - name: Copy assets
+        run: |
+          mkdir -p freshapp/assets/icon
+          if [ -d "myapp/assets/icon" ]; then
+            cp -r myapp/assets/icon/* freshapp/assets/icon/
+            echo "Assets copied"
+            ls freshapp/assets/icon/
+          else
+            echo "No assets folder found"
+          fi
+
       - name: Fix Gradle version
         working-directory: freshapp
         run: |
