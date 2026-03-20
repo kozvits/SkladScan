@@ -64,9 +64,7 @@ class _BotEditScreenState extends State<BotEditScreen> {
               icon: Icons.wifi_rounded,
               color: Colors.blue,
               title: 'Основной канал — WiFi',
-              subtitle:
-                  'Приложение автоматически найдёт СкладПриёмник '
-                  'через mDNS. Или укажите IP вручную.',
+              subtitle: 'Приложение автоматически найдёт СкладПриёмник через mDNS. Или укажите IP вручную.',
             ),
             const SizedBox(height: 12),
 
@@ -152,7 +150,7 @@ class _BotEditScreenState extends State<BotEditScreen> {
               ),
               validator: (v) {
                 if (v == null || v.trim().isEmpty) return 'Введите токен';
-                if (!RegExp(r'^\d+:[A-Za-z0-9_-]+\$').hasMatch(v.trim())) {
+                if (!RegExp(r"^\d+:.+$").hasMatch(v.trim())) {
                   return 'Неверный формат токена';
                 }
                 return null;
@@ -237,12 +235,10 @@ class _BotEditScreenState extends State<BotEditScreen> {
       });
       return;
     }
-
     setState(() {
       _isHttpTestLoading = true;
       _httpTestResult = null;
     });
-
     final ok = await TelegramService().testHttpServer(url);
     setState(() {
       _isHttpTestLoading = false;
@@ -259,14 +255,12 @@ class _BotEditScreenState extends State<BotEditScreen> {
       _isTestLoading = true;
       _testResult = null;
     });
-
     final result = await TelegramService().testBot(TelegramBot(
       id: 'test',
       name: _nameCtrl.text.trim(),
       token: _tokenCtrl.text.trim(),
       chatId: _chatIdCtrl.text.trim(),
     ));
-
     setState(() {
       _isTestLoading = false;
       _testSuccess = result.isSuccess;
