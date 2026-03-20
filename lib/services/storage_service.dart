@@ -5,10 +5,12 @@ import 'package:hive_flutter/hive_flutter.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../models/scanned_item.dart';
 import '../models/telegram_bot.dart';
+import '../models/http_server.dart';
 
 class StorageService {
   static const String _itemsBoxName = 'scanned_items';
   static const String _botsKey = 'telegram_bots';
+  static const String _serversKey = 'http_servers';
   static const String _userNameKey = 'user_name';
   static const String _pinKey = 'pin_code';
   static const String _pinEnabledKey = 'pin_enabled';
@@ -33,11 +35,9 @@ class StorageService {
   }
 
   Future<void> addItem(ScannedItem item) async {
-    // Если такой штрихкод уже есть — увеличиваем количество
     final existing = _itemsBox.values
         .where((i) => i.barcode == item.barcode)
         .toList();
-
     if (existing.isNotEmpty) {
       final old = existing.first;
       old.quantity += item.quantity;
@@ -48,21 +48,11 @@ class StorageService {
     }
   }
 
-  Future<void> updateItem(ScannedItem item) async {
-    await item.save();
-  }
-
-  Future<void> deleteItem(ScannedItem item) async {
-    await item.delete();
-  }
-
-  Future<void> clearAllItems() async {
-    await _itemsBox.clear();
-  }
-
-  int getTotalQuantity() {
-    return _itemsBox.values.fold(0, (sum, item) => sum + item.quantity);
-  }
+  Future<void> updateItem(ScannedItem item) async => await item.save();
+  Future<void> deleteItem(ScannedItem item) async => await item.delete();
+  Future<void> clearAllItems() async => await _itemsBox.clear();
+  int getTotalQuantity() =>
+      _itemsBox.values.fold(0, (sum, item) => sum + item.quantity);
 
   // ─── Telegram боты ────────────────────────────────────────────────────────
 
@@ -70,17 +60,18 @@ class StorageService {
     final String? json = _prefs.getString(_botsKey);
     if (json == null) return [];
     final List<dynamic> list = jsonDecode(json);
-    return list.map((e) => TelegramBot.fromJson(e as Map<String, dynamic>)).toList();
+    return list
+        .map((e) => TelegramBot.fromJson(e as Map<String, dynamic>))
+        .toList();
   }
 
   Future<void> saveBots(List<TelegramBot> bots) async {
-    final json = jsonEncode(bots.map((b) => b.toJson()).toList());
-    await _prefs.setString(_botsKey, json);
+    await _prefs.setString(
+        _botsKey, jsonEncode(bots.map((b) => b.toJson()).toList()));
   }
 
   Future<void> addBot(TelegramBot bot) async {
-    final bots = getBots();
-    bots.add(bot);
+    final bots = getBots()..add(bot);
     await saveBots(bots);
   }
 
@@ -98,16 +89,49 @@ class StorageService {
     await saveBots(bots);
   }
 
+  // ─── HTTP серверы ─────────────────────────────────────────────────────────
+
+  List<HttpServer> getServers() {
+    final String? json = _prefs.getString(_serversKey);
+    if (json == null) return [];
+    final List<dynamic> list = jsonDecode(json);
+    return list
+        .map((e) => HttpServer.fromJson(e as Map<String, dynamic>))
+        .toList();
+  }
+
+  Future<void> saveServers(List<HttpServer> servers) async {
+    await _prefs.setString(
+        _serversKey, jsonEncode(servers.map((s) => s.toJson()).toList()));
+  }
+
+  Future<void> addServer(HttpServer server) async {
+    final servers = getServers()..add(server);
+    await saveServers(servers);
+  }
+
+  Future<void> updateServer(HttpServer server) async {
+    final servers = getServers();
+    final idx = servers.indexWhere((s) => s.id == server.id);
+    if (idx != -1) {
+      servers[idx] = server;
+      await saveServers(servers);
+    }
+  }
+
+  Future<void> deleteServer(String serverId) async {
+    final servers = getServers()..removeWhere((s) => s.id == serverId);
+    await saveServers(servers);
+  }
+
   // ─── Настройки пользователя ───────────────────────────────────────────────
 
   String getUserName() => _prefs.getString(_userNameKey) ?? '';
 
-  Future<void> setUserName(String name) async {
-    await _prefs.setString(_userNameKey, name);
-  }
+  Future<void> setUserName(String name) async =>
+      await _prefs.setString(_userNameKey, name);
 
   String? getPin() => _prefs.getString(_pinKey);
-
   bool isPinEnabled() => _prefs.getBool(_pinEnabledKey) ?? false;
 
   Future<void> setPin(String pin) async {
