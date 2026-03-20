@@ -20,15 +20,10 @@ class _BotEditScreenState extends State<BotEditScreen> {
   late TextEditingController _nameCtrl;
   late TextEditingController _tokenCtrl;
   late TextEditingController _chatIdCtrl;
-  late TextEditingController _serverUrlCtrl;
 
   bool _isTestLoading = false;
   String? _testResult;
   bool _testSuccess = false;
-  bool _isHttpTestLoading = false;
-  String? _httpTestResult;
-  bool _httpTestSuccess = false;
-  bool _isDiscovering = false;
 
   @override
   void initState() {
@@ -36,7 +31,6 @@ class _BotEditScreenState extends State<BotEditScreen> {
     _nameCtrl = TextEditingController(text: widget.bot?.name ?? '');
     _tokenCtrl = TextEditingController(text: widget.bot?.token ?? '');
     _chatIdCtrl = TextEditingController(text: widget.bot?.chatId ?? '');
-    _serverUrlCtrl = TextEditingController(text: widget.bot?.serverUrl ?? '');
   }
 
   @override
@@ -44,7 +38,6 @@ class _BotEditScreenState extends State<BotEditScreen> {
     _nameCtrl.dispose();
     _tokenCtrl.dispose();
     _chatIdCtrl.dispose();
-    _serverUrlCtrl.dispose();
     super.dispose();
   }
 
@@ -53,94 +46,61 @@ class _BotEditScreenState extends State<BotEditScreen> {
     final isEdit = widget.bot != null;
     return Scaffold(
       appBar: AppBar(
-        title: Text(isEdit ? 'Редактировать бота' : 'Добавить бота'),
+        title: Text(isEdit
+            ? '\u0420\u0435\u0434\u0430\u043a\u0442\u0438\u0440\u043e\u0432\u0430\u0442\u044c \u0431\u043e\u0442\u0430'
+            : '\u0414\u043e\u0431\u0430\u0432\u0438\u0442\u044c \u0431\u043e\u0442\u0430'),
       ),
       body: Form(
         key: _formKey,
         child: ListView(
           padding: const EdgeInsets.all(16),
           children: [
-            _SectionHeader(
-              icon: Icons.wifi_rounded,
-              color: Colors.blue,
-              title: 'Основной канал — WiFi',
-              subtitle: 'Приложение автоматически найдёт СкладПриёмник через mDNS. Или укажите IP вручную.',
-            ),
-            const SizedBox(height: 12),
-
-            TextFormField(
-              controller: _serverUrlCtrl,
-              decoration: const InputDecoration(
-                labelText: 'Адрес сервера (необязательно)',
-                hintText: 'http://192.168.1.100:8765',
-                prefixIcon: Icon(Icons.computer_rounded),
+            // Информация
+            Container(
+              padding: const EdgeInsets.all(14),
+              decoration: BoxDecoration(
+                color: const Color(0xFF2CA5E0).withOpacity(0.06),
+                borderRadius: BorderRadius.circular(10),
+                border: Border.all(
+                    color: const Color(0xFF2CA5E0).withOpacity(0.25)),
               ),
-              keyboardType: TextInputType.url,
-            ),
-            const SizedBox(height: 8),
-
-            Row(
-              children: [
-                Expanded(
-                  child: OutlinedButton.icon(
-                    onPressed: _isDiscovering ? null : _autoDiscover,
-                    icon: _isDiscovering
-                        ? const SizedBox(
-                            width: 16, height: 16,
-                            child: CircularProgressIndicator(strokeWidth: 2),
-                          )
-                        : const Icon(Icons.search_rounded),
-                    label: Text(_isDiscovering
-                        ? 'Поиск...'
-                        : 'Найти автоматически'),
+              child: const Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Icon(Icons.telegram,
+                      color: Color(0xFF2CA5E0), size: 20),
+                  SizedBox(width: 10),
+                  Expanded(
+                    child: Text(
+                      '\u0422\u0435\u043b\u0435\u0433\u0440\u0430\u043c \u0431\u043e\u0442 \u0434\u043b\u044f \u043e\u0442\u043f\u0440\u0430\u0432\u043a\u0438 \u043e\u0442\u0447\u0451\u0442\u043e\u0432. '
+                      '\u0418\u0441\u043f\u043e\u043b\u044c\u0437\u0443\u0435\u0442\u0441\u044f \u043a\u043e\u0433\u0434\u0430 WiFi \u043d\u0435\u0434\u043e\u0441\u0442\u0443\u043f\u0435\u043d.',
+                      style: TextStyle(
+                          fontSize: 13,
+                          color: Color(0xFF2CA5E0),
+                          height: 1.4),
+                    ),
                   ),
-                ),
-                const SizedBox(width: 8),
-                Expanded(
-                  child: OutlinedButton.icon(
-                    onPressed: _isHttpTestLoading ? null : _testHttpServer,
-                    icon: _isHttpTestLoading
-                        ? const SizedBox(
-                            width: 16, height: 16,
-                            child: CircularProgressIndicator(strokeWidth: 2),
-                          )
-                        : const Icon(Icons.wifi_tethering_rounded),
-                    label: const Text('Проверить'),
-                  ),
-                ),
-              ],
+                ],
+              ),
             ),
-
-            if (_httpTestResult != null) ...[
-              const SizedBox(height: 8),
-              _ResultBanner(text: _httpTestResult!, isSuccess: _httpTestSuccess),
-            ],
-
             const SizedBox(height: 20),
-            const Divider(),
-            const SizedBox(height: 12),
 
-            _SectionHeader(
-              icon: Icons.telegram,
-              color: const Color(0xFF2CA5E0),
-              title: 'Резервный канал — Telegram',
-              subtitle: 'Используется если WiFi недоступен.',
-            ),
-            const SizedBox(height: 12),
-
+            // Название
             TextFormField(
               controller: _nameCtrl,
               decoration: const InputDecoration(
-                labelText: 'Название',
-                hintText: 'Основной склад',
+                labelText: '\u041d\u0430\u0437\u0432\u0430\u043d\u0438\u0435',
+                hintText: '\u041e\u0441\u043d\u043e\u0432\u043d\u043e\u0439 \u0441\u043a\u043b\u0430\u0434',
                 prefixIcon: Icon(Icons.label_outline),
               ),
               textCapitalization: TextCapitalization.sentences,
-              validator: (v) =>
-                  v == null || v.trim().isEmpty ? 'Введите название' : null,
+              validator: (v) => v == null || v.trim().isEmpty
+                  ? '\u0412\u0432\u0435\u0434\u0438\u0442\u0435 \u043d\u0430\u0437\u0432\u0430\u043d\u0438\u0435'
+                  : null,
             ),
             const SizedBox(height: 12),
 
+            // Bot Token
             TextFormField(
               controller: _tokenCtrl,
               decoration: const InputDecoration(
@@ -149,15 +109,18 @@ class _BotEditScreenState extends State<BotEditScreen> {
                 prefixIcon: Icon(Icons.vpn_key_outlined),
               ),
               validator: (v) {
-                if (v == null || v.trim().isEmpty) return 'Введите токен';
-                if (!RegExp(r"^\d+:.+$").hasMatch(v.trim())) {
-                  return 'Неверный формат токена';
+                if (v == null || v.trim().isEmpty) {
+                  return '\u0412\u0432\u0435\u0434\u0438\u0442\u0435 \u0442\u043e\u043a\u0435\u043d';
+                }
+                if (!RegExp(r'^\d+:.+$').hasMatch(v.trim())) {
+                  return '\u041d\u0435\u0432\u0435\u0440\u043d\u044b\u0439 \u0444\u043e\u0440\u043c\u0430\u0442 \u0442\u043e\u043a\u0435\u043d\u0430';
                 }
                 return null;
               },
             ),
             const SizedBox(height: 12),
 
+            // Chat ID
             TextFormField(
               controller: _chatIdCtrl,
               decoration: const InputDecoration(
@@ -166,24 +129,28 @@ class _BotEditScreenState extends State<BotEditScreen> {
                 prefixIcon: Icon(Icons.chat_outlined),
               ),
               keyboardType: TextInputType.number,
-              validator: (v) =>
-                  v == null || v.trim().isEmpty ? 'Введите Chat ID' : null,
+              validator: (v) => v == null || v.trim().isEmpty
+                  ? '\u0412\u0432\u0435\u0434\u0438\u0442\u0435 Chat ID'
+                  : null,
             ),
             const SizedBox(height: 12),
 
+            // Проверить Telegram
             OutlinedButton.icon(
               onPressed: _isTestLoading ? null : _testBot,
               icon: _isTestLoading
                   ? const SizedBox(
-                      width: 16, height: 16,
+                      width: 16,
+                      height: 16,
                       child: CircularProgressIndicator(strokeWidth: 2),
                     )
                   : const Icon(Icons.send_rounded),
-              label: const Text('Проверить Telegram'),
+              label: const Text(
+                  '\u041f\u0440\u043e\u0432\u0435\u0440\u0438\u0442\u044c Telegram'),
             ),
 
             if (_testResult != null) ...[
-              const SizedBox(height: 8),
+              const SizedBox(height: 10),
               _ResultBanner(text: _testResult!, isSuccess: _testSuccess),
             ],
 
@@ -194,59 +161,14 @@ class _BotEditScreenState extends State<BotEditScreen> {
               style: ElevatedButton.styleFrom(
                 minimumSize: const Size.fromHeight(52),
               ),
-              child: Text(isEdit ? 'Сохранить' : 'Добавить бота'),
+              child: Text(isEdit
+                  ? '\u0421\u043e\u0445\u0440\u0430\u043d\u0438\u0442\u044c'
+                  : '\u0414\u043e\u0431\u0430\u0432\u0438\u0442\u044c \u0431\u043e\u0442\u0430'),
             ),
           ],
         ),
       ),
     );
-  }
-
-  Future<void> _autoDiscover() async {
-    setState(() {
-      _isDiscovering = true;
-      _httpTestResult = null;
-    });
-
-    final found = await TelegramService().discoverServer();
-
-    setState(() {
-      _isDiscovering = false;
-      if (found != null) {
-        _serverUrlCtrl.text = found;
-        _httpTestResult = 'Найден: $found';
-        _httpTestSuccess = true;
-      } else {
-        _httpTestResult =
-            'Сервер не найден. Проверьте что СкладПриёмник '
-            'запущен и подключён к той же сети WiFi. '
-            'Или введите IP вручную.';
-        _httpTestSuccess = false;
-      }
-    });
-  }
-
-  Future<void> _testHttpServer() async {
-    final url = _serverUrlCtrl.text.trim();
-    if (url.isEmpty) {
-      setState(() {
-        _httpTestResult = 'Введите адрес сервера или нажмите Найти автоматически';
-        _httpTestSuccess = false;
-      });
-      return;
-    }
-    setState(() {
-      _isHttpTestLoading = true;
-      _httpTestResult = null;
-    });
-    final ok = await TelegramService().testHttpServer(url);
-    setState(() {
-      _isHttpTestLoading = false;
-      _httpTestSuccess = ok;
-      _httpTestResult = ok
-          ? 'Сервер доступен! WiFi канал работает.'
-          : 'Сервер недоступен. Проверьте IP и порт.';
-    });
   }
 
   Future<void> _testBot() async {
@@ -255,93 +177,41 @@ class _BotEditScreenState extends State<BotEditScreen> {
       _isTestLoading = true;
       _testResult = null;
     });
+
     final result = await TelegramService().testBot(TelegramBot(
       id: 'test',
       name: _nameCtrl.text.trim(),
       token: _tokenCtrl.text.trim(),
       chatId: _chatIdCtrl.text.trim(),
     ));
+
     setState(() {
       _isTestLoading = false;
       _testSuccess = result.isSuccess;
       _testResult = result.isSuccess
-          ? 'Бот найден: ${result.message ?? ""}'
-          : result.error ?? 'Ошибка';
+          ? '\u0411\u043e\u0442 \u043d\u0430\u0439\u0434\u0435\u043d: ${result.message ?? ''}'
+          : result.error ?? '\u041e\u0448\u0438\u0431\u043a\u0430';
     });
   }
 
   void _save() {
     if (!_formKey.currentState!.validate()) return;
     final provider = context.read<AppProvider>();
-    final serverUrl = _serverUrlCtrl.text.trim();
 
     if (widget.bot != null) {
       provider.updateBot(widget.bot!.copyWith(
         name: _nameCtrl.text.trim(),
         token: _tokenCtrl.text.trim(),
         chatId: _chatIdCtrl.text.trim(),
-        serverUrl: serverUrl.isEmpty ? null : serverUrl,
       ));
     } else {
       provider.addBot(
         _nameCtrl.text.trim(),
         _tokenCtrl.text.trim(),
         _chatIdCtrl.text.trim(),
-        serverUrl: serverUrl.isEmpty ? null : serverUrl,
       );
     }
     Navigator.pop(context);
-  }
-}
-
-class _SectionHeader extends StatelessWidget {
-  final IconData icon;
-  final Color color;
-  final String title;
-  final String subtitle;
-
-  const _SectionHeader({
-    required this.icon,
-    required this.color,
-    required this.title,
-    required this.subtitle,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.all(14),
-      decoration: BoxDecoration(
-        color: color.withOpacity(0.06),
-        borderRadius: BorderRadius.circular(10),
-        border: Border.all(color: color.withOpacity(0.25)),
-      ),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Icon(icon, color: color, size: 20),
-          const SizedBox(width: 10),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(title,
-                    style: TextStyle(
-                        fontSize: 13,
-                        fontWeight: FontWeight.w600,
-                        color: color)),
-                const SizedBox(height: 4),
-                Text(subtitle,
-                    style: TextStyle(
-                        fontSize: 12,
-                        color: color.withOpacity(0.8),
-                        height: 1.4)),
-              ],
-            ),
-          ),
-        ],
-      ),
-    );
   }
 }
 
