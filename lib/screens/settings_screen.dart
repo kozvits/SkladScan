@@ -55,7 +55,7 @@ class SettingsScreen extends StatelessWidget {
                 ),
 
               // ── Telegram боты ───────────────────────────────────────────
-              _SectionHeader('Telegram боты'),
+              _SectionHeader('Канал отправки'),
               ...provider.bots.map((bot) => _BotTile(
                     bot: bot,
                     onEdit: () => Navigator.push(
@@ -68,7 +68,7 @@ class SettingsScreen extends StatelessWidget {
               _SettingsTile(
                 icon: Icons.add_circle_outline_rounded,
                 iconColor: AppTheme.success,
-                title: 'Добавить бота',
+                title: 'Добавить канал',
                 onTap: () => Navigator.push(
                   context,
                   MaterialPageRoute(builder: (_) => const BotEditScreen()),
