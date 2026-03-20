@@ -80,8 +80,8 @@ class SettingsScreen extends StatelessWidget {
               _SettingsTile(
                 icon: Icons.inventory_2_outlined,
                 iconColor: AppTheme.primary,
-                title: 'СкладИнвентарь',
-                subtitle: 'Версия 1.0.0',
+                title: 'SkladScan',
+                subtitle: 'Версия 1.0.2',
               ),
             ],
           ),
