@@ -38,6 +38,18 @@ jobs:
           cp myapp/android/gradle.properties freshapp/android/gradle.properties
           cp myapp/android/settings.gradle freshapp/android/settings.gradle
 
+      - name: Copy icons
+        run: |
+          for density in mdpi hdpi xhdpi xxhdpi xxxhdpi; do
+            if [ -d "myapp/android/app/src/main/res/mipmap-$density" ]; then
+              cp -f myapp/android/app/src/main/res/mipmap-$density/ic_launcher.png \
+                freshapp/android/app/src/main/res/mipmap-$density/ic_launcher.png
+              echo "Copied mipmap-$density"
+            else
+              echo "Not found: mipmap-$density"
+            fi
+          done
+
       - name: Fix Gradle version
         working-directory: freshapp
         run: |
