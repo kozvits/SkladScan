@@ -4,6 +4,7 @@ import 'package:flutter/foundation.dart';
 import 'package:uuid/uuid.dart';
 import '../models/scanned_item.dart';
 import '../models/telegram_bot.dart';
+import '../models/http_server.dart';
 import '../services/storage_service.dart';
 import '../services/telegram_service.dart';
 
@@ -18,10 +19,11 @@ class AppProvider extends ChangeNotifier {
   })  : _storage = storage,
         _telegram = telegram;
 
-  // тФАтФАтФА State тФАтФАтФАтФАтФАтФАтФАтФАтФАтФАтФАтФАтФАтФАтФАтФАтФАтФАтФАтФАтФАтФАтФАтФАтФАтФАтФАтФАтФАтФАтФАтФАтФАтФАтФАтФАтФАтФАтФАтФАтФАтФАтФАтФАтФАтФАтФАтФАтФАтФАтФАтФАтФАтФАтФАтФАтФАтФАтФАтФАтФАтФАтФАтФАтФА
+  // ─── State ─────────────────────────────────────────────────────────────────
 
   List<ScannedItem> _items = [];
   List<TelegramBot> _bots = [];
+  List<HttpServer> _servers = [];
   String _userName = '';
   bool _isLoading = false;
   String? _lastError;
@@ -29,10 +31,11 @@ class AppProvider extends ChangeNotifier {
   bool _isAuthenticated = false;
   DeliveryResult? _lastDeliveryResult;
 
-  // тФАтФАтФА Getters тФАтФАтФАтФАтФАтФАтФАтФАтФАтФАтФАтФАтФАтФАтФАтФАтФАтФАтФАтФАтФАтФАтФАтФАтФАтФАтФАтФАтФАтФАтФАтФАтФАтФАтФАтФАтФАтФАтФАтФАтФАтФАтФАтФАтФАтФАтФАтФАтФАтФАтФАтФАтФАтФАтФАтФАтФАтФАтФАтФАтФАтФАтФА
+  // ─── Getters ───────────────────────────────────────────────────────────────
 
   List<ScannedItem> get items => List.unmodifiable(_items);
   List<TelegramBot> get bots => List.unmodifiable(_bots);
+  List<HttpServer> get servers => List.unmodifiable(_servers);
   String get userName => _userName;
   bool get isLoading => _isLoading;
   String? get lastError => _lastError;
@@ -41,19 +44,20 @@ class AppProvider extends ChangeNotifier {
   int get totalQuantity => _items.fold(0, (sum, i) => sum + i.quantity);
   DeliveryResult? get lastDeliveryResult => _lastDeliveryResult;
 
-  // тФАтФАтФА Init тФАтФАтФАтФАтФАтФАтФАтФАтФАтФАтФАтФАтФАтФАтФАтФАтФАтФАтФАтФАтФАтФАтФАтФАтФАтФАтФАтФАтФАтФАтФАтФАтФАтФАтФАтФАтФАтФАтФАтФАтФАтФАтФАтФАтФАтФАтФАтФАтФАтФАтФАтФАтФАтФАтФАтФАтФАтФАтФАтФАтФАтФАтФАтФАтФАтФА
+  // ─── Init ──────────────────────────────────────────────────────────────────
 
   Future<void> init() async {
     await _storage.init();
     _items = _storage.getItems();
     _bots = _storage.getBots();
+    _servers = _storage.getServers();
     _userName = _storage.getUserName();
     _isPinEnabled = _storage.isPinEnabled();
     _isAuthenticated = !_isPinEnabled;
     notifyListeners();
   }
 
-  // тФАтФАтФА ╨в╨╛╨▓╨░╤А╤Л тФАтФАтФАтФАтФАтФАтФАтФАтФАтФАтФАтФАтФАтФАтФАтФАтФАтФАтФАтФАтФАтФАтФАтФАтФАтФАтФАтФАтФАтФАтФАтФАтФАтФАтФАтФАтФАтФАтФАтФАтФАтФАтФАтФАтФАтФАтФАтФАтФАтФАтФАтФАтФАтФАтФАтФАтФАтФАтФАтФАтФАтФАтФАтФА
+  // ─── Товары ────────────────────────────────────────────────────────────────
 
   Future<void> addScannedItem(
       String barcode, String name, int quantity) async {
@@ -86,20 +90,14 @@ class AppProvider extends ChangeNotifier {
     notifyListeners();
   }
 
-  // тФАтФАтФА Telegram ╨▒╨╛╤В╤Л тФАтФАтФАтФАтФАтФАтФАтФАтФАтФАтФАтФАтФАтФАтФАтФАтФАтФАтФАтФАтФАтФАтФАтФАтФАтФАтФАтФАтФАтФАтФАтФАтФАтФАтФАтФАтФАтФАтФАтФАтФАтФАтФАтФАтФАтФАтФАтФАтФАтФАтФАтФАтФАтФАтФАтФАтФА
+  // ─── Telegram боты ─────────────────────────────────────────────────────────
 
-  Future<void> addBot(
-    String name,
-    String token,
-    String chatId, {
-    String? serverUrl,
-  }) async {
+  Future<void> addBot(String name, String token, String chatId) async {
     final bot = TelegramBot(
       id: _uuid.v4(),
       name: name,
       token: token,
       chatId: chatId,
-      serverUrl: serverUrl,
     );
     await _storage.addBot(bot);
     _bots = _storage.getBots();
@@ -122,9 +120,38 @@ class AppProvider extends ChangeNotifier {
     return _telegram.testBot(bot);
   }
 
-  // тФАтФАтФА ╨Ю╤В╨┐╤А╨░╨▓╨║╨░ ╨╛╤В╤З╤С╤В╨░ тФАтФАтФАтФАтФАтФАтФАтФАтФАтФАтФАтФАтФАтФАтФАтФАтФАтФАтФАтФАтФАтФАтФАтФАтФАтФАтФАтФАтФАтФАтФАтФАтФАтФАтФАтФАтФАтФАтФАтФАтФАтФАтФАтФАтФАтФАтФАтФАтФАтФАтФАтФАтФАтФАтФА
+  // ─── HTTP серверы ──────────────────────────────────────────────────────────
 
-  Future<DeliveryResult> sendReport(TelegramBot bot) async {
+  Future<void> addServer(String name, String url) async {
+    final server = HttpServer(
+      id: _uuid.v4(),
+      name: name,
+      url: url,
+    );
+    await _storage.addServer(server);
+    _servers = _storage.getServers();
+    notifyListeners();
+  }
+
+  Future<void> updateServer(HttpServer server) async {
+    await _storage.updateServer(server);
+    _servers = _storage.getServers();
+    notifyListeners();
+  }
+
+  Future<void> deleteServer(String serverId) async {
+    await _storage.deleteServer(serverId);
+    _servers = _storage.getServers();
+    notifyListeners();
+  }
+
+  Future<bool> testServer(String url) async {
+    return _telegram.testHttpServer(url);
+  }
+
+  // ─── Отправка отчёта ───────────────────────────────────────────────────────
+
+  Future<DeliveryResult> sendReportViaTelegram(TelegramBot bot) async {
     _isLoading = true;
     _lastError = null;
     _lastDeliveryResult = null;
@@ -138,15 +165,31 @@ class AppProvider extends ChangeNotifier {
 
     _isLoading = false;
     _lastDeliveryResult = result;
-
-    if (!result.isSuccess) {
-      _lastError = result.error;
-    }
+    if (!result.isSuccess) _lastError = result.error;
     notifyListeners();
     return result;
   }
 
-  // тФАтФАтФА ╨Э╨░╤Б╤В╤А╨╛╨╣╨║╨╕ тФАтФАтФАтФАтФАтФАтФАтФАтФАтФАтФАтФАтФАтФАтФАтФАтФАтФАтФАтФАтФАтФАтФАтФАтФАтФАтФАтФАтФАтФАтФАтФАтФАтФАтФАтФАтФАтФАтФАтФАтФАтФАтФАтФАтФАтФАтФАтФАтФАтФАтФАтФАтФАтФАтФАтФАтФАтФАтФАтФАтФА
+  Future<DeliveryResult> sendReportViaHttp(HttpServer server) async {
+    _isLoading = true;
+    _lastError = null;
+    _lastDeliveryResult = null;
+    notifyListeners();
+
+    final result = await _telegram.sendInventoryReportHttp(
+      server: server,
+      items: _items,
+      userName: _userName,
+    );
+
+    _isLoading = false;
+    _lastDeliveryResult = result;
+    if (!result.isSuccess) _lastError = result.error;
+    notifyListeners();
+    return result;
+  }
+
+  // ─── Настройки ─────────────────────────────────────────────────────────────
 
   Future<void> setUserName(String name) async {
     await _storage.setUserName(name);
